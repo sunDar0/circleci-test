@@ -28,8 +28,10 @@ workflows:
           name: build-and-push-image-master
           requires:
             - build-and-test
+          region: ${AWS_DEFAULT_REGION}
+          account-url: ${AWS_ECR_ACCOUNT_URL}
           context: myContext
-          repo: "circleci-test"
+          repo: "circleci-test-nestjs"
           tag: "latest,${CIRCLE_SHA1}"
           filters:
             branches:
