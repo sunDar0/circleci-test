@@ -4,6 +4,7 @@ version: 2.1
 
 orbs: 
   node: circleci/node@5.0.2
+  aws-ecr: circleci/aws-ecr@8.1.2
 
 # Define a job to be invoked later in a workflow.
 # See: https://circleci.com/docs/2.0/configuration-reference/#jobs
@@ -20,6 +21,17 @@ jobs:
 # Invoke jobs via workflows
 # See: https://circleci.com/docs/2.0/configuration-reference/#workflows
 workflows:
-  build-and-test:
+  build-and-deploy:
     jobs:
       - build-and-test
+      - aws-ecr/build-and-push-image:
+          name: build-and-push-image-master
+          requires:
+            - build-and-test
+          context: myContext
+          repo: "circleci-test"
+          tag: "latest,${CIRCLE_SHA1}"
+          filters:
+            branches:
+              only:
+                - /master\/.*/
