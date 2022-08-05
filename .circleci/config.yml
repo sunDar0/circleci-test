@@ -23,7 +23,3 @@ workflows:
   build-and-test:
     jobs:
       - build-and-test
-  run-npm-command:
-    jobs:
-      - node/run:
-        npm-run: build
