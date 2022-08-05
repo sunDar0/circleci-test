@@ -1,6 +1,7 @@
 # compiled output
 /dist
 /node_modules
+ecr-docker-push.sh
 
 # Logs
 logs
