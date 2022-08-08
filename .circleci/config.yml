@@ -30,7 +30,6 @@ workflows:
             - build-and-test
           context: myContext
           attach-workspace: true
-          checkout: false
           region: "${AWS_DEFAULT_REGION}"
           repo: "circleci-test-nestjs"
           tag: "latest,${CIRCLE_SHA1}"
