@@ -23,7 +23,6 @@ jobs:
 workflows:
   build-and-deploy:
     jobs:
-      - build-and-test
       - aws-ecr/build-and-push-image:
           name: build-and-push-image-master
           requires:
