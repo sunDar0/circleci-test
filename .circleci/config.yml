@@ -25,8 +25,6 @@ workflows:
     jobs:
       - aws-ecr/build-and-push-image:
           name: build-and-push-image-master
-          requires:
-            - build-and-test
           context: myContext
           attach-workspace: true
           region: "${AWS_DEFAULT_REGION}"
