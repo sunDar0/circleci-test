@@ -8,12 +8,6 @@ orbs:
 
 # Define a job to be invoked later in a workflow.
 # See: https://circleci.com/docs/2.0/configuration-reference/#jobs
-jobs:
-  build-and-test:
-    executor:
-      name: aws-cli/default
-    steps:
-      - checkout
       
 
 # Invoke jobs via workflows
@@ -23,14 +17,9 @@ workflows:
     jobs:
       - aws-ecr/build-and-push-image:
           context: myContext
-          registry-id: AWS_ACCOUNT_ID
-          region: AWS_DEFAULT_REGION
           repo: "circleci-test-nestjs"
           tag: "latest"
           filters:
             branches:
               only:
                 - /master\/.*/
-      - build-and-test:
-          requires:
-            - aws-ecr/build-and-push-image
