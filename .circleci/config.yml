@@ -34,9 +34,10 @@ workflows:
                   - master
         - aws-ecs/deploy-service-update:
             name: deploy-service-update-master
-            cluster: '${AWS_CLUSTER_NAME}'
+            cluster: ${AWS_CLUSTER_NAME}
+            service-name: circleci-test-service
             container-image-name-updates: 'container=circleci-test-container,tag=${CIRCLE_SHA1}'
-            family: '${AWS_TASK_DEFINITION_FAMILY_NAME}'
+            family: ${AWS_TASK_DEFINITION_FAMILY_NAME}
             requires:
               - build-and-push-image-master
 
