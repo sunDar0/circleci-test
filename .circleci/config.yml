@@ -9,14 +9,21 @@ orbs:
 # Define a job to be invoked later in a workflow.
 # See: https://circleci.com/docs/2.0/configuration-reference/#jobs
 jobs:
-  build-and-test:
-    executor:
-      name: node/default
+  build:
+    machine: 
+      image: ubuntu-2004:202201-02
+    working_directory: ~/repo
     steps:
       - checkout
-      - node/install-packages
       - run:
-          command: npm run test
+          name: Build docker image and push to ECR
+          command: |
+            aws ecr get-login-password --region ap-northeast-2 | docker login --username AWS --password-stdin $AWS_ECR_URL
+            docker build \
+              -t $AWS_ECR_URL/$APP_NAME:$CIRCLE_SHA1 \
+              -t $AWS_ECR_URL/$APP_NAME:latest .
+            docker tag $APP_NAME:latest $AWS_ECR_URL/$APP_NAME:latest
+            docker push $AWS_ECR_URL/$APP_NAME
   image-build:
     docker:
       - image: docker:18.09.0
@@ -48,13 +55,36 @@ jobs:
           # 다음 job에서 docker 이미지를 사용 할 수 있도록 workspace에 저장해둡니다.
           root: .
           paths:
-              - cache  
+              - cache
+  image-deploy:
+    docker:
+      - image: docker:18.09.0
+    steps:
+      - checkout
+      - setup_remote_docker
+      - attach_workspace:
+          # build 단계에서 사용한 workspace를 붙여줍니다.
+          at: workspace
+      - run:
+          name: Install dependencies
+          command: |
+            apk update && apk add py-pip bash jq
+            pip install awscli==1.16.60
+      - run:
+          # 이전에 빌드해둔 파일로부터 docker 이미지를 불러옵니다.
+          name: Load Docker image layer cache
+          command: |
+            docker load -i workspace/cache/$APP_NAME.tar
+      - deploy:
+          # ECS에 deploy하는 복잡한 단계는 별개의 shell script로 진행합니다.
+          name: Deploy to ECS
+          command: |
+            chmod +x ./deploy.sh
+            ./deploy.sh
 
 # Invoke jobs via workflows
 # See: https://circleci.com/docs/2.0/configuration-reference/#workflows
 workflows:
   build-and-deploy:
     jobs:
-      - build-and-test
-      - image-build
-    
+      - build
