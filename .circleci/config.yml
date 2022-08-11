@@ -3,6 +3,7 @@ version: 2.1
 orbs:
   node: circleci/node@5.0.2
   aws-ecr: circleci/aws-ecr@8.1.2
+  aws-ecs: circleci/aws-ecs@3.0.0
 
 jobs:
   build-and-test:
@@ -19,6 +20,7 @@ workflows:
       jobs:
         - build-and-test
         - aws-ecr/build-and-push-image:
+            name: build-and-push-image-master
             requires:
               - build-and-test
             repo: ${APP_NAME}
@@ -30,4 +32,11 @@ workflows:
               branches:
                 only:
                   - master
+        - aws-ecs/deploy-service-update:
+            name: deploy-service-update-master
+            cluster: '${AWS_CLUSTER_NAME}'
+            container-image-name-updates: 'container=${APP_NAME}-service,tag=${CIRCLE_SHA1}'
+            family: '${AWS_TASK_DEFINITION_FAMILY_NAME}'
+            requires:
+              - build-and-push-image-master
 
