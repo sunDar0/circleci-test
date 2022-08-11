@@ -1,90 +1,12 @@
-# Use the latest 2.1 version of CircleCI pipeline process engine.
-# See: https://circleci.com/docs/2.0/configuration-reference
 version: 2.1
 
-orbs: 
-  node: circleci/node@5.0.2
-  aws-cli: circleci/aws-cli@3.1.1
+orbs:
+  aws-ecr: circleci/aws-ecr@8.1.2
 
-# Define a job to be invoked later in a workflow.
-# See: https://circleci.com/docs/2.0/configuration-reference/#jobs
-jobs:
-  build:
-    machine: 
-      image: ubuntu-2004:202201-02
-    working_directory: ~/repo
-    steps:
-      - checkout
-      - run:
-          name: Build docker image and push to ECR
-          command: |
-            aws ecr get-login-password --region ap-northeast-2 | docker login --username AWS --password-stdin $AWS_ECR_URL
-            docker build \
-              -t $AWS_ECR_URL/$APP_NAME:$CIRCLE_SHA1 \
-              -t $AWS_ECR_URL/$APP_NAME:latest .
-            docker tag $APP_NAME:latest $AWS_ECR_URL/$APP_NAME:latest
-            docker push $AWS_ECR_URL/$APP_NAME
-  image-build:
-    docker:
-      - image: docker:18.09.0
-    steps:
-      - checkout
-      - setup_remote_docker
-      - run:
-          name: Install dependencies
-          command: |
-            apk update && apk add curl
-      - run:
-          name: Build Docker image
-          command:
-            >-
-            docker build \
-              -t $AWS_ECR_URL/$APP_NAME:$CIRCLE_SHA1 \
-              -t $AWS_ECR_URL/$APP_NAME:latest .
-      - run:
-          name: Run unit tests
-          command: |
-            docker run $AWS_ECR_URL/$APP_NAME:latest yarn test
-      - run:
-          # 빌드한 docker 이미지를 파일로 저장합니다.
-          name: Save Docker image layer cache
-          command: |
-            mkdir cache
-            docker save -o cache/$APP_NAME.tar $AWS_ECR_URL/$APP_NAME
-      - persist_to_workspace:
-          # 다음 job에서 docker 이미지를 사용 할 수 있도록 workspace에 저장해둡니다.
-          root: .
-          paths:
-              - cache
-  image-deploy:
-    docker:
-      - image: docker:18.09.0
-    steps:
-      - checkout
-      - setup_remote_docker
-      - attach_workspace:
-          # build 단계에서 사용한 workspace를 붙여줍니다.
-          at: workspace
-      - run:
-          name: Install dependencies
-          command: |
-            apk update && apk add py-pip bash jq
-            pip install awscli==1.16.60
-      - run:
-          # 이전에 빌드해둔 파일로부터 docker 이미지를 불러옵니다.
-          name: Load Docker image layer cache
-          command: |
-            docker load -i workspace/cache/$APP_NAME.tar
-      - deploy:
-          # ECS에 deploy하는 복잡한 단계는 별개의 shell script로 진행합니다.
-          name: Deploy to ECS
-          command: |
-            chmod +x ./deploy.sh
-            ./deploy.sh
-
-# Invoke jobs via workflows
-# See: https://circleci.com/docs/2.0/configuration-reference/#workflows
 workflows:
-  build-and-deploy:
-    jobs:
-      - build
+    example-workflow:
+      jobs:
+        - aws-ecr/build-and-push-image:
+            repo: circleci-test 
+            role-arn: ${AWS_ECS_ARN} 
+            region: ${AWS_DEFAULT_REGION} 
