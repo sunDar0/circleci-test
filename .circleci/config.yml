@@ -29,5 +29,5 @@ workflows:
                 #only: /v(\d+)\.[0-9]?[0-9]\.[0-9]?[0-9]$/ # 버전 정규식 v1.0.0의 형태
               branches:
                 only:
-                  - /master\/.*/
+                  - master
 
