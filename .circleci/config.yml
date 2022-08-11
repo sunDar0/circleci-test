@@ -36,7 +36,7 @@ workflows:
             name: deploy-service-update-master
             cluster: ${AWS_CLUSTER_NAME}
             service-name: circleci-test-service
-            container-image-name-updates: 'container=circleci-test-container,tag=${CIRCLE_SHA1}'
+            container-image-name-updates: 'container=circleci-test-container,tag=latest'
             family: ${AWS_TASK_DEFINITION_FAMILY_NAME}
             requires:
               - build-and-push-image-master
