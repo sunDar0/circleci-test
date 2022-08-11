@@ -35,7 +35,7 @@ workflows:
         - aws-ecs/deploy-service-update:
             name: deploy-service-update-master
             cluster: '${AWS_CLUSTER_NAME}'
-            container-image-name-updates: 'container=${APP_NAME}-service,tag=${CIRCLE_SHA1}'
+            container-image-name-updates: 'container=${AWS_TASK_DEFINITION_FAMILY_NAME},tag=${CIRCLE_SHA1}'
             family: '${AWS_TASK_DEFINITION_FAMILY_NAME}'
             requires:
               - build-and-push-image-master
