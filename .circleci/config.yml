@@ -23,4 +23,9 @@ workflows:
               - build-and-test
             repo: ${APP_NAME}
             role-arn: ${AWS_ECS_ARN} 
-            region: ${AWS_DEFAULT_REGION} 
+            region: ${AWS_DEFAULT_REGION}
+            filters:
+            branches:
+              only:
+                - /master\/.*/
+
