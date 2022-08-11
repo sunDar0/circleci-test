@@ -3,23 +3,58 @@
 version: 2.1
 
 orbs: 
-  aws-ecr: circleci/aws-ecr@8.1.2
+  node: circleci/node@5.0.2
   aws-cli: circleci/aws-cli@3.1.1
 
 # Define a job to be invoked later in a workflow.
 # See: https://circleci.com/docs/2.0/configuration-reference/#jobs
-      
+jobs:
+  build-and-test:
+    executor:
+      name: node/default
+    steps:
+      - checkout
+      - node/install-packages
+      - run:
+          command: npm run test
+  image-build:
+    docker:
+      - image: docker:18.09.0
+    steps:
+      - checkout
+      - setup_remote_docker
+      - run:
+          name: Install dependencies
+          command: |
+            apk update && apk add curl
+      - run:
+          name: Build Docker image
+          command:
+            >-
+            docker build \
+              -t $AWS_ECR_URL/$APP_NAME:$CIRCLE_SHA1 \
+              -t $AWS_ECR_URL/$APP_NAME:latest .
+      - run:
+          name: Run unit tests
+          command: |
+            docker run $AWS_ECR_URL/$APP_NAME:latest yarn test
+      - run:
+          # 빌드한 docker 이미지를 파일로 저장합니다.
+          name: Save Docker image layer cache
+          command: |
+            mkdir cache
+            docker save -o cache/$APP_NAME.tar $AWS_ECR_URL/$APP_NAME
+      - persist_to_workspace:
+          # 다음 job에서 docker 이미지를 사용 할 수 있도록 workspace에 저장해둡니다.
+          root: .
+          paths:
+              - cache  
 
 # Invoke jobs via workflows
 # See: https://circleci.com/docs/2.0/configuration-reference/#workflows
 workflows:
-  build_and_push_image:
+  build-and-deploy:
     jobs:
-      - aws-ecr/build-and-push-image:
-          context: myContext
-          repo: "circleci-test-nestjs"
-          tag: "latest"
-          filters:
-            branches:
-              only:
-                - /master\/.*/
+      - build-and-test
+      - image-build
+    
