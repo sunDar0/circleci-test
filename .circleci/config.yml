@@ -27,16 +27,14 @@ workflows:
             role-arn: ${AWS_ECS_ARN} 
             region: ${AWS_DEFAULT_REGION}
             filters:
-              #tags:
-                #only: /v(\d+)\.[0-9]?[0-9]\.[0-9]?[0-9]$/ # 버전 정규식 v1.0.0의 형태
               branches:
                 only:
                   - master
         - aws-ecs/deploy-service-update:
             name: deploy-service-update-master
             cluster: ${AWS_CLUSTER_NAME}
-            service-name: circleci-test-service
-            container-image-name-updates: 'container=circleci-test-container,tag=latest'
+            service-name: ${AWS_ECS_SERVICE_NAME}
+            container-image-name-updates: 'container=${AWS_TASK_CONTAINER_NAME},tag=latest'
             family: ${AWS_TASK_DEFINITION_FAMILY_NAME}
             requires:
               - build-and-push-image-master
