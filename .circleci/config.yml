@@ -46,7 +46,7 @@ workflows:
                   - develop
                   
         - aws-ecs/deploy-service-update:
-            name: build-and-push-image-master
+            name: deploy-service-update-master
             cluster: ${AWS_CLUSTER_NAME}
             service-name: ${AWS_ECS_SERVICE_NAME}
             container-image-name-updates: 'container=${AWS_TASK_CONTAINER_NAME},tag=latest'
@@ -55,7 +55,7 @@ workflows:
               - build-and-push-image-master
 
         - aws-ecs/deploy-service-update:
-            name: build-and-push-image-develop
+            name: deploy-service-update-develop
             cluster: ${AWS_CLUSTER_NAME}
             service-name: ${AWS_ECS_SERVICE_NAME}
             container-image-name-updates: 'container=${AWS_TASK_CONTAINER_NAME},tag=dev'
