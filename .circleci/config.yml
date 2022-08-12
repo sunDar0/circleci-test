@@ -24,18 +24,42 @@ workflows:
             requires:
               - build-and-test
             repo: ${APP_NAME}
-            role-arn: ${AWS_ECS_ARN} 
+            #role-arn: ${AWS_ECS_ARN} 
             region: ${AWS_DEFAULT_REGION}
+            tag: 'latest'
             filters:
               branches:
                 only:
                   - master
+                  
+        - aws-ecr/build-and-push-image:
+            name: build-and-push-image-develop
+            requires:
+              - build-and-test
+            repo: ${APP_NAME}
+            #role-arn: ${AWS_ECS_ARN} 
+            region: ${AWS_DEFAULT_REGION}
+            tag: 'dev'
+            filters:
+              branches:
+                only:
+                  - develop
+                  
         - aws-ecs/deploy-service-update:
-            name: deploy-service-update-master
+            name: build-and-push-image-master
             cluster: ${AWS_CLUSTER_NAME}
             service-name: ${AWS_ECS_SERVICE_NAME}
             container-image-name-updates: 'container=${AWS_TASK_CONTAINER_NAME},tag=latest'
             family: ${AWS_TASK_DEFINITION_FAMILY_NAME}
             requires:
               - build-and-push-image-master
+
+        - aws-ecs/deploy-service-update:
+            name: build-and-push-image-develop
+            cluster: ${AWS_CLUSTER_NAME}
+            service-name: ${AWS_ECS_SERVICE_NAME}
+            container-image-name-updates: 'container=${AWS_TASK_CONTAINER_NAME},tag=dev'
+            family: ${AWS_TASK_DEFINITION_FAMILY_NAME}
+            requires:
+              - build-and-push-image-develop
 
